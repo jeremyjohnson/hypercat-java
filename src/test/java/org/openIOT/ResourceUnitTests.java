@@ -1,5 +1,7 @@
 package org.openIOT;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 
 import org.codehaus.jackson.JsonGenerationException;
@@ -13,9 +15,6 @@ import org.slf4j.LoggerFactory;
 
 public class ResourceUnitTests {
  private Logger log = LoggerFactory.getLogger(ResourceUnitTests.class);
-    
-
-
     
  @Test
  public void testBasicResource(){
@@ -60,7 +59,6 @@ public class ResourceUnitTests {
                 e.printStackTrace();
      }
 
-
      Assert.assertEquals("http://TESTRESOURCE", res.getHref());
      
      Relation rel = (Relation) res.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
@@ -68,6 +66,24 @@ public class ResourceUnitTests {
      
  }
  
+ @Test
+ public void testJSONfile() throws JsonParseException, JsonMappingException, IOException {
+ 
+     FileReader fr = null;
+     try { 
+             fr = new FileReader("src/test/resources/resourceExample.json");
+         } catch (FileNotFoundException e) { 
+                 log.info("File not found!"+e);
+         }
+     
+     Resource res = new Resource(fr);
+     log.info("created HC from file:"+res.toPrettyJson());
+     log.info("hc has item-metadata lt of size="+res.getIObjectMetadata().size());
+     Relation rel = (Relation) res.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+     log.info("descrip rel from file="+rel.toString());
+     Assert.assertEquals("A resource", rel.val);
+     
+ }
  
  String prettyPrint(Object o){
      String output = "NO JSON";

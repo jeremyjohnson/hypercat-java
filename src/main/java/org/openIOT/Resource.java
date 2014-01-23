@@ -1,9 +1,11 @@
 package org.openIOT;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -78,6 +80,7 @@ public class Resource {
          JsonNode rootNode = mapper.readTree(jsonString);
          JsonNode hrefNode = rootNode.path("href");
          log.info("hrefnode value={}",hrefNode.getTextValue());
+         log.info("setting resource href to"+hrefNode.getTextValue());
          this.href=hrefNode.getTextValue();
          
          JsonNode relationsNode = rootNode.path("i-object-metadata");
@@ -90,6 +93,12 @@ public class Resource {
              String val = (String) relation.findValuesAsText("val").toArray()[0];
              this.addRelation(new Relation(rel,val));
          }
+    }
+    
+
+    //or via a textfile containing JSON 
+    public Resource(FileReader fr) throws JsonParseException, JsonMappingException, IOException {  
+        this(new Hypercat().getJsonString(fr),true);      
     }
     
     
@@ -164,7 +173,35 @@ public class Resource {
     return ("Resource:" +output);
     }
 
-
+    String toJson(){
+        String output = "NO JSON";
+        ObjectMapper mapper = new ObjectMapper();         
+        try {
+            output = mapper.writeValueAsString(this);
+            } catch (JsonGenerationException e) {
+                e.printStackTrace();
+            } catch (JsonMappingException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+        }
+        return output;
+  }
+    
+  String toPrettyJson(){
+        String output = "NO JSON";
+        ObjectMapper mapper = new ObjectMapper();         
+        try {
+            output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+            } catch (JsonGenerationException e) {
+                e.printStackTrace();
+            } catch (JsonMappingException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+        }
+        return output;
+  }
         
 
 }

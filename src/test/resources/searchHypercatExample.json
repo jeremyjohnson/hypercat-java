@@ -1,0 +1,75 @@
+{
+    "item-metadata": [
+        {
+            "rel": "urn:X-tsbiot:rels:isContentType",
+            "val": "application/vnd.tsbiot.catalogue+json"
+        },
+        {
+            "rel": "urn:X-tsbiot:rels:hasDescription:en",
+            "val": "Search Test Catalogue"
+        },
+        { 
+            "rel":"urn:X-tsbiot:rels:supportsSearch", 
+            "val":"urn:X-tsbiot:search:simple" 
+        }
+    ],
+    "items": [
+        {
+            "href": "http://FIXME",
+            "i-object-metadata": [
+                {
+                    "rel": "urn:X-tsbiot:rels:isContentType",
+                    "val": "application/vnd.tsbiot.catalogue+json"
+                },
+                {
+                    "rel": "urn:X-tsbiot:rels:hasDescription:en",
+                    "val": "resource1"
+                }
+             ]
+        },
+        {
+            "href": "http://FIXME2",
+            "i-object-metadata": [
+                {
+                    "rel": "urn:X-tsbiot:rels:isContentType",
+                    "val": "application/vnd.tsbiot.catalogue+json"
+                },
+                {
+                    "rel": "urn:X-tsbiot:rels:hasDescription:en",
+                    "val": "resource2"
+                }
+            ]
+        },
+        {
+            "href": "http://RESOURCEURL",
+            "i-object-metadata": [
+                {
+                    "rel": "urn:X-tsbiot:rels:isContentType",
+                    "val": "resourcecontenttype"
+                },
+                {
+                    "rel": "urn:X-tsbiot:rels:hasDescription:en",
+                    "val": "A resource"
+                }
+            ]
+        },
+        { 
+		    "href": "http://A",
+		    "i-object-metadata": [ 
+ 			   { 
+ 			        "rel": "urn:X-tsbiot:rels:1",
+ 			        "val": 1 
+ 			   },
+ 			   { 
+ 			        "rel":" urn:X-tsbiot:rels:2",
+ 			        "val": 2 
+ 			   },
+ 			   { 
+ 			        "rel":"urn:X-tsbiot:rels:3",
+ 			        "val": 3 
+ 			   }   
+ 			]
+	     }
+        
+    ]
+}

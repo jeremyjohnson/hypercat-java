@@ -1,10 +1,12 @@
 package org.openIOT;
 
-import java.io.File;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 
 import org.codehaus.jackson.JsonGenerationException;
@@ -114,7 +116,7 @@ public class Hypercat {
      Iterator<JsonNode> items = itemsNode.getElements();
      while (items.hasNext()) {
 
-         Resource item = new Resource("1","2","3");
+         Resource item = new Resource();
          Relation reln = null;
 
          ObjectNode itemNode = (ObjectNode) items.next();
@@ -123,7 +125,7 @@ public class Hypercat {
          //first get Resource href
          String itemHref = itemNode.findValue("href").toString();
          log.info("href for item={}",itemHref);      
-    //     item.setHref(href);
+         item.setHref(itemHref);
          
          // then get list of metadata relations and add them to i-object-metadata    
          JsonNode iomdNode = itemNode.path("i-object-metadata");
@@ -164,11 +166,10 @@ public class Hypercat {
 
     }
     
-  
-    
+
     //or via a textfile containing JSON 
-    public Hypercat(File defFile) {
-    
+    public Hypercat(FileReader fr) throws JsonParseException, JsonMappingException, IOException {  
+        this(getJsonString(fr),true);      
     }
  
 
@@ -242,15 +243,59 @@ public class Hypercat {
     
     public void removeItem(Object o){    
        //if (items.containsKey(getKey(o))){
-           items.remove(o); 
-       
+           items.remove(o);       
     }
+
+    
+    public static HashMap<String, String> getQueryMap(String query)  
+    {  
+        String[] params = query.split("&");  
+        HashMap<String, String> map = new HashMap<String, String>();  
+        for (String param : params)  
+        {  
+            String name = param.split("=")[0];  
+            String value = param.split("=")[1];  
+            map.put(name, value);  
+        }  
+        return map;  
+    } 
     
   
     public Hypercat searchCat (String querystring){
-        
-        Hypercat hc = new Hypercat("");
-        
+        Hypercat hc = new Hypercat("Search results for querystring >"+querystring+"<");
+        HashMap qmap = getQueryMap(querystring);
+        String hrefQuery = (String) qmap.get("href");
+        String relQuery = (String) qmap.get("rel");
+        String valQuery = (String) qmap.get("val");
+        log.info("this-itemslist-keyset="+this.getItems().entrySet().toString());
+
+        Iterator it =  this.getItems().keySet().iterator(); 
+        while (it.hasNext()){
+            String key= (String) it.next();
+            Resource res = (Resource)this.getItems().get(key);
+            String hrefstr = res.getHref().replace("\"", "");
+            if (!"".equals(hrefQuery) && hrefQuery!=null){  
+                //log.info("using key="+ key+" comparing query "+hrefQuery+ " to "+hrefstr);
+                if (hrefQuery.equals(hrefstr)){
+                    hc.addItem(res);
+                }   
+            }
+            
+            Iterator relIt = res.getIObjectMetadata().iterator();
+            while (relIt.hasNext()){
+                    Relation rel = (Relation) relIt.next();
+                    if (!"".equals(relQuery) && relQuery!=null){
+                        if (!hc.getItems().containsKey(res.getHref()) && relQuery.equals(rel.getRel())){
+                            hc.addItem(res);
+                        } 
+                    }
+                    if (!"".equals(valQuery) && valQuery!=null){
+                        if (!hc.getItems().containsKey(res.getHref()) && valQuery.equals(rel.getVal())){
+                            hc.addItem(res);
+                        } 
+                    }
+            }          
+        }
         return hc;      
         
     }
@@ -305,6 +350,17 @@ public class Hypercat {
      
      public void setItems(HashMap<String, Object> items) {
          this.items = items;
+     }
+     
+     static String getJsonString(FileReader fr) throws IOException {
+         String jsonString = "";
+    
+         BufferedReader reader = new BufferedReader(fr);
+         String line = null;
+         while ((line = reader.readLine()) != null) {
+                 jsonString+=line;
+         }
+         return jsonString;
      }
     
 

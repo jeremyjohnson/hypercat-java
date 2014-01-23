@@ -1,7 +1,9 @@
 package org.openIOT;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -153,11 +155,60 @@ public class HypercatUnitTests {
    
 
    log.info("serialised object = {}", hc6.toPrettyJson());
-   
-   
-   
     
     }
+    
+    
+    @Test
+    public void testJSONfile() throws JsonParseException, JsonMappingException, IOException {
+        
+  
+            log.info("Working Directory = " +
+                   System.getProperty("user.dir"));
+        
+        FileReader fr = null;
+        try { 
+                fr = new FileReader("src/test/resources/hypercatExample.json");
+            } catch (FileNotFoundException e) { 
+                    log.info("File not found!"+e);
+            }
+        
+        Hypercat hc = new Hypercat(fr);
+        log.info("created HC from file:"+hc.toPrettyJson());
+        log.info("hc has item-metadata lt of size="+hc.getItemMetadata().size());
+        Relation rel = (Relation) hc.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+        log.info("descrip rel from file="+rel.toString());
+        Assert.assertEquals("ingestiontestcat", rel.val);
+        
+    }
+    
+    @Test
+    public void testSearch() throws JsonParseException, JsonMappingException, IOException {
+        
+
+        
+        FileReader fr = null;
+        try { 
+                fr = new FileReader("src/test/resources/searchHypercatExample.json");
+            } catch (FileNotFoundException e) { 
+                    log.info("File not found!"+e);
+            }
+        Hypercat hc = new Hypercat(fr);
+        log.info("created HC from file:"+hc.toPrettyJson());
+        log.info("hc has item-metadata lt of size="+hc.getItemMetadata().size());
+        Relation rel = (Relation) hc.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+        log.info("descrip rel from file="+rel.toString());
+        Assert.assertEquals("Search Test Catalogue", rel.val);
+        
+        Hypercat results = hc.searchCat("href=http://A");
+        log.info ("results hc = "+results.toPrettyJson());
+        
+    }
+    
+    
+    
+    
+    
 
     String prettyPrint(Object o){
         String output = "NO JSON";
