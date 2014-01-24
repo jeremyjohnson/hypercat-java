@@ -55,7 +55,7 @@ public class Hypercat {
    @JsonProperty("item-metadata")
    private ArrayList<Relation> itemMetadata; 
    private  HashMap <String, Object>  items ;  
-   //list containing contents, either items or Hypercats.  @todo Could tighten this by by subclassing Resource?  But this breaks Jackson's serialization
+   //list containing contents, either items or Hypercats.  @todo Could tighten this by by subclassing Item?  But this breaks Jackson's serialization
   
    
    private Logger log = LoggerFactory.getLogger(Hypercat.class);
@@ -107,7 +107,7 @@ public class Hypercat {
      }
      
      // now add items to the hypercat
-     // all items in the Items collection are forced into Resource objects, even though they may actually be hypercats.
+     // all items in the Items collection are forced into Item objects, even though they may actually be hypercats.
      // items in the items collection of a cat. only have an href and a collection of Relations. 
      //The child Items of an added hypercat are ignored here
      
@@ -116,13 +116,13 @@ public class Hypercat {
      Iterator<JsonNode> items = itemsNode.getElements();
      while (items.hasNext()) {
 
-         Resource item = new Resource();
+         Item item = new Item();
          Relation reln = null;
 
          ObjectNode itemNode = (ObjectNode) items.next();
          //log.info("item json={}",item.toString());
          
-         //first get Resource href
+         //first get Item href
          String itemHref = itemNode.findValue("href").toString();
          log.info("href for item={}",itemHref);      
          item.setHref(itemHref);
@@ -157,17 +157,15 @@ public class Hypercat {
          this.items.put(itemHref, item);
          
          
-        Resource itout =  (Resource) this.getItems().get(itemHref);
+        Item itout =  (Item) this.getItems().get(itemHref);
          
          log.info("itemobject is "+itout.getClass());
-         log.info("itemobject has rels collecton "+itout.getIObjectMetadata().toString());
-         
+         log.info("itemobject has rels collecton "+itout.getIObjectMetadata().toString());        
      }
-
     }
     
 
-    //or via a textfile containing JSON 
+    // construct via a textfile containing JSON 
     public Hypercat(FileReader fr) throws JsonParseException, JsonMappingException, IOException {  
         this(getJsonString(fr),true);      
     }
@@ -211,8 +209,8 @@ public class Hypercat {
         String href="";
         log.info("class="+item.getClass());
         
-        if ((Resource.class).equals(item.getClass())) {          
-            Resource res = (Resource) item;
+        if ((Item.class).equals(item.getClass())) {          
+            Item res = (Item) item;
             href=res.getHref();
             log.info("href from item is"+href);
         }
@@ -267,8 +265,8 @@ public class Hypercat {
         String hrefQuery = (String) qmap.get("href");
         String relQuery = (String) qmap.get("rel");
         String valQuery = (String) qmap.get("val");
-        HashMap <String, Resource> relResults = new HashMap<String, Resource>();
-        HashMap <String, Resource> valResults = new HashMap<String, Resource>();
+        HashMap <String, Item> relResults = new HashMap<String, Item>();
+        HashMap <String, Item> valResults = new HashMap<String, Item>();
         boolean relQueryPresent = (!"".equals(relQuery) && relQuery!=null); 
         boolean valQueryPresent = (!"".equals(valQuery) && valQuery!=null); 
         log.info("this-itemslist-keyset="+this.getItems().entrySet().toString());
@@ -276,7 +274,7 @@ public class Hypercat {
         Iterator it =  this.getItems().keySet().iterator(); 
         while (it.hasNext()){
             String key= (String) it.next();
-            Resource res = (Resource)this.getItems().get(key);
+            Item res = (Item)this.getItems().get(key);
             String hrefstr = res.getHref().replace("\"", "");
            
             
@@ -292,7 +290,7 @@ public class Hypercat {
             /* this is a bit more complex, since the two queries may be additive.  However, there is no full logical search (no OR can be specified)
              * The most straightforward method is to construct a HashMap of results for each query, returning one or the other for single queries
              * and in the case of two non-null parameters, return the intersection-set
-             * If an OR parameter is added to the spec in future, the sum of the two sets could be returned
+             * If an OR parameter is added to the spec in future, the union of the two HashMaps could be returned
              */
             
             Iterator relIt = res.getIObjectMetadata().iterator();
@@ -333,39 +331,22 @@ public class Hypercat {
     }
 
 
-    public String generateHref() {
-        
+    public String generateHref() {       
         return UUID.randomUUID().toString();     
     }
 
 
-    String toJson(){
+    String toJson() throws JsonGenerationException, JsonMappingException, IOException{
           String output = "NO JSON";
-          ObjectMapper mapper = new ObjectMapper();         
-          try {
-              output = mapper.writeValueAsString(this);
-              } catch (JsonGenerationException e) {
-                  e.printStackTrace();
-              } catch (JsonMappingException e) {
-                  e.printStackTrace();
-              } catch (IOException e) {
-                  e.printStackTrace();
-          }
+          ObjectMapper mapper = new ObjectMapper();                 
+          output = mapper.writeValueAsString(this);
           return output;
     }
       
-    String toPrettyJson(){
+    String toPrettyJson() throws JsonGenerationException, JsonMappingException, IOException{
           String output = "NO JSON";
-          ObjectMapper mapper = new ObjectMapper();         
-          try {
-              output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
-              } catch (JsonGenerationException e) {
-                  e.printStackTrace();
-              } catch (JsonMappingException e) {
-                  e.printStackTrace();
-              } catch (IOException e) {
-                  e.printStackTrace();
-          }
+          ObjectMapper mapper = new ObjectMapper();                
+          output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);       
           return output;
     }
     

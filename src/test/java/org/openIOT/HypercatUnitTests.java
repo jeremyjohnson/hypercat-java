@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 
 /* The basic Hypercat object.  In the composite pattern, this is the only object that exists (ala the Lambda world), and is 'extended'
- * for leaf/resource objects by removing child objects.  Currently breaking this by subclassing Resource  
+ * for leaf/resource objects by removing child objects.  Currently breaking this by subclassing Item  
  * 
  * still need to finalize rules for traversing the graph of hypercats, and how much needs to be in-memory at any given time
  * 
@@ -30,13 +30,18 @@ public class HypercatUnitTests {
     /*
      * tests:  
      * 0) creation of a basic minimum-spec hypercat
+     * 
      * 1) creation of a hypercat populated with multiple Relations (some identical)
-     * 2) creation of a hypercat populated with Resource items (some of which are Hypercats)
+     * 2) creation of a hypercat populated with Item items (some of which are Hypercats)
      * 3) adding duplicate resource item to a hypercat fails
+     * 
      * 4) Create hypercat from JSON string
      * 5) Creation of a hypercat from an invalid JSON string fails
+     * 
      * 6) Output a hypercat to a flat JSON string
      * 7) Output a hypercat to a pretty JSON string
+     * 
+     * 8) Search tests
      * 
      */
     
@@ -87,12 +92,12 @@ public class HypercatUnitTests {
         String localUID = hc.addItem(hc4,autoHref);        
         Assert.assertEquals("itemExists", localUID); 
         
-        //add an Resource to hc           
-        Resource item = new Resource("itemHref","added Resource","text");
+        //add an Item to hc           
+        Item item = new Item("itemHref","added Item","text");
         hc.addItem(item);
               
        //and retrieve it            
-        Resource retrievedItem = (Resource) hc.getItems().get("itemHref");
+        Item retrievedItem = (Item) hc.getItems().get("itemHref");
         Assert.assertEquals("itemHref",retrievedItem.getHref() );        
         
         //test that adding the same item again fails
@@ -102,7 +107,7 @@ public class HypercatUnitTests {
     
     
     @Test
-    public void testJsonFunctions() {
+    public void testJsonFunctions() throws JsonGenerationException, JsonMappingException, IOException {
         Hypercat hc6 = null;
         //test construct-hypercat-from-JSON-string
         String jsonString = "{ \"item-metadata\": [{  \"rel\": \"urn:X-tsbiot:rels:isContentType\",  \"val\": \"application/vnd.tsbiot.catalogue+json\"  }, {\"rel\": \"urn:X-tsbiot:rels:hasDescription:en\",  \"val\": \"Test Description\"  } ],"
@@ -116,11 +121,11 @@ public class HypercatUnitTests {
         try {
                 hc6 = new Hypercat(jsonString,true);
                 } catch (JsonParseException e) {
-                     e.printStackTrace();
+                    log.info("problem parsing JSON:"+e);
                 } catch (JsonMappingException e) {
-                    e.printStackTrace();
+                    log.info("problem maping JSON to hypercat object:"+e);
                 } catch (IOException e) {
-                   e.printStackTrace();
+                    log.info("I/O problem reading JSON"+e);
         }
   
         log.info(" itemmetadata = ", hc6.getItemMetadata().toString());    
@@ -145,27 +150,21 @@ public class HypercatUnitTests {
    
   // log.info("itout href={}",itout.getHref());
    
-   Resource hydratedItem = (Resource) itout;
+   Item hydratedItem = (Item) itout;
    String output = "";
    log.info("metadata aray="+hydratedItem.getIObjectMetadata().toString());
  
    log.info("hydrated item metadata 1 is "+output);
-   
-    log.info("retrieved item = "+  prettyPrint(hydratedItem) );
-   
 
-   log.info("serialised object = {}", hc6.toPrettyJson());
+        log.info("retrieved item = "+  hydratedItem.toPrettyJson() );
+  
     
     }
     
     
     @Test
     public void testJSONfile() throws JsonParseException, JsonMappingException, IOException {
-        
-  
-            log.info("Working Directory = " +
-                   System.getProperty("user.dir"));
-        
+    //test construct-from-file
         FileReader fr = null;
         try { 
                 fr = new FileReader("src/test/resources/hypercatExample.json");
@@ -184,9 +183,7 @@ public class HypercatUnitTests {
     
     @Test
     public void testSearch() throws JsonParseException, JsonMappingException, IOException {
-        
-
-        
+        //test search-catalogue-and-return-cat  
         FileReader fr = null;
         try { 
                 fr = new FileReader("src/test/resources/searchHypercatExample.json");
@@ -227,43 +224,22 @@ public class HypercatUnitTests {
        rel = (Relation) results.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
       Assert.assertEquals("Search results for querystring: rel=urn:X-tsbiot:rels:isAnIntegerValue&val=3", rel.val);
       Assert.assertEquals(1, results.getItems().size());
-      log.info ("results hc = "+results.toPrettyJson());
-
-        
+      log.info ("results hc = "+results.toPrettyJson());    
     }
     
 
-    String prettyPrint(Object o){
+    String prettyPrint(Object o) throws JsonGenerationException, JsonMappingException, IOException{
         String output = "NO JSON";
         ObjectMapper mapper = new ObjectMapper();
         //mapper.setVisibility(JsonMethod.FIELD, Visibility.ANY);
-       // ObjectWriter typedWriter = mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Resource.class);
+        // ObjectWriter typedWriter = mapper.writerWithType(mapper.getTypeFactory().constructCollectionType(Item.class); 
+        output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(o);
        
-        try {
-            output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(o);
-        } catch (JsonGenerationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
         return output;
  }
   
    
     // test print as JSON()
     // test prettyprint as JSON()
-    
-    //test construct-from-file
-    
-    
-    //test search-catalogue-and-return-cat
-    
-    
-
 
 }
