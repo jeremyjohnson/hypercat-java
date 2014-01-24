@@ -1,0 +1,24 @@
+Hypercat libraries for java
+
+This project houses a set of java methods and classes for manipulating Hypercats - 
+that is, simple JSON container-objects that are used to carry data back and forward 
+between devices and/or consumers connected to the Internet of Things.
+
+The code is made available under the MIT licence, and has been written for the
+openIOT cluster - a group of organisations set up to promote interoperability
+between devices and systems.
+
+More information about (and the specification for) Hypercat can be found here:
+
+http://wiki.1248.io/doku.php?id=hypercat
+
+The javadoc for this library (included) will explain what it does, but in brief, it
+contains classes that represent Hypercat, Item and Relation objects, and methods that
+enable their creation (both anually and from JSON streams) and manipulation.
+
+The project welcomes contributions by interested hackers and other ne'er-do-wells.
+
+Jeremy Johnson, Jan 2014
+
+
+
