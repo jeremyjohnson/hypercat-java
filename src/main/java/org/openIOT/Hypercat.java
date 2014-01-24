@@ -19,419 +19,472 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
-/** This class represents the Hypercat object as dedfined in the 1.1 spec. (below)  
+/**
+ * This class represents the Hypercat object as dedfined in the 1.1 spec.
+ * (below)
  * 
- * /*
- *  (Spec. para 4.3) defining a HyperCat:
- *  A "Catalogue” object is a JSON object, which MUST contain all of the following properties:
+ * (Spec. para 4.3) defining a HyperCat: A "Catalogue” object is a JSON object,
+ * which MUST contain all of the following properties:
  * 
- *      “items”  - a list of the items contained by the catalogue - value of this must be JSON array of zero or more JSON objects
- *      “item-metadata”  - an array of metadata objects (Relations) describing the catalogue.   value of this must be JSON array of metadata objects
- *  
- *  (note that it is NOT mandatory for a catalogue to bear a unique href or id, although it MAY do so as a metadata relation.)
- *      
- *  The metadata array for Catalogues MAY contain multiple metadata objects with the same rel (and val) properties
- *  
- *  The metadata array for Catalogues MUST contain a metadata object for each of the mandatory metadata object relationships. 
- *  for the Catalogue object, these are:
- *  
- *  rel: “urn:X-tsbiot:rels:hasDescription:en” val: [string with URN description of Catalogue]
- *  
- *  eg: 
- *        { "rel": "urn:X-tsbiot:rels:hasDescription:en",  "val": "test catalogue" }
- *  
- *  the constructor for a basic Hypercat enforces this by requiring a non-null String carrying the description
-
+ * “items” - a list of the items contained by the catalogue - value of this must
+ * be JSON array of zero or more JSON objects “item-metadata” - an array of
+ * metadata objects (Relations) describing the catalogue. value of this must be
+ * JSON array of metadata objects
+ * 
+ * (note that it is NOT mandatory for a catalogue to bear a unique href or id,
+ * although it MAY do so as a metadata relation.)
+ * 
+ * The metadata array for Catalogues MAY contain multiple metadata objects with
+ * the same rel (and val) properties
+ * 
+ * The metadata array for Catalogues MUST contain a metadata object for each of
+ * the mandatory metadata object relationships. for the Catalogue object, these
+ * are:
+ * 
+ * rel: “urn:X-tsbiot:rels:hasDescription:en” val: [string with URN description
+ * of Catalogue]
+ * 
+ * eg: { "rel": "urn:X-tsbiot:rels:hasDescription:en", "val": "test catalogue" }
+ * 
+ * the constructor for a basic Hypercat enforces this by requiring a non-null
+ * String carrying the description
  */
-
-
-
 
 public class Hypercat {
 
-   @JsonProperty("item-metadata")
-   private ArrayList<Relation> itemMetadata; 
-   private  HashMap <String, Object>  items ;  
-  
-   private Logger log = LoggerFactory.getLogger(Hypercat.class);
-   private ObjectMapper mapper = new ObjectMapper();
-   
-   
-    //HyperCat constructors. 
-   /** Default (empty) constructor required by Jackson
-    * 
-    */
-   public Hypercat() {
-   }
-    
+    @JsonProperty("item-metadata")
+    private ArrayList<Relation> itemMetadata;
+    private HashMap<String, Object> items;
 
-  /** simple constructor, returning a minimum-spec Hypercat.  Requires a single string parameter which should contain a text-description of the hypercat
-   * 
-   * @param description - a test strng which should contain a text-description of the hypercat
-   * 
-   */
+    private Logger log = LoggerFactory.getLogger(Hypercat.class);
+    private ObjectMapper mapper = new ObjectMapper();
+
+    // HyperCat constructors.
+    /**
+     * Default (empty) constructor required by Jackson
+     * 
+     */
+    public Hypercat() {
+    }
+
+    /**
+     * simple constructor, returning a minimum-spec Hypercat. Requires a single
+     * string parameter which should contain a text-description of the hypercat
+     * 
+     * @param description
+     *            - a test strng which should contain a text-description of the
+     *            hypercat
+     */
     public Hypercat(String description) {
-        super();   
+        super();
         log.info("creating new hypercat");
         itemMetadata = new ArrayList<Relation>();
-        items = new HashMap <String, Object>();
-        Relation descriptionRel = new Relation ("urn:X-tsbiot:rels:hasDescription:en", description); 
-        //log.info(" in HC constructor - relation {} created with value {}",descriptionRel.rel,descriptionRel.val );      
+        items = new HashMap<String, Object>();
+        Relation descriptionRel = new Relation("urn:X-tsbiot:rels:hasDescription:en", description);
+        // log.info(" in HC constructor - relation {} created with value {}",descriptionRel.rel,descriptionRel.val
+        // );
         addRelation(descriptionRel);
     }
-    
-    
-  /** JSON-string constructor  - constructs a Hypercat object from a strng containing a JSON representation of the required hypercat
-   * 
-   * @param jsonString - the string contaning the JSON definition
-   * @param isJSON - a boolean required to distinguish this method-signature from the simple-constructor version.  Not used
-   */
+
+    /**
+     * JSON-string constructor - constructs a Hypercat object from a strng
+     * containing a JSON representation of the required hypercat
+     * 
+     * @param jsonString
+     *            - the string contaning the JSON definition
+     * @param isJSON
+     *            - a boolean required to distinguish this method-signature from
+     *            the simple-constructor version. Not used
+     */
     public Hypercat(String jsonString, boolean isJSON) throws JsonParseException, JsonMappingException, IOException {
 
-    itemMetadata = new ArrayList<Relation>();
-    items = new HashMap<String, Object>();
-   
-    log.info("creating new hypercat from JSON string");
+        itemMetadata = new ArrayList<Relation>();
+        items = new HashMap<String, Object>();
 
-    // would use Jackson's JSONCreator functions here, except it appears to have a problem with HashMaps - it cannot reliably handle parsing into a Map 
-    // So we have to do it manually, retrieve the maps as Arraylists and convert them into HashMaps
-    
-     JsonNode rootNode = mapper.readTree(jsonString);
-     JsonNode hrefNode = rootNode.path("href");
-   //  log.info("hrefnode value={}",hrefNode.getTextValue());
-     
-     JsonNode relationsNode = rootNode.path("item-metadata");
-     
-     Iterator<JsonNode> relations = relationsNode.getElements();
-     while (relations.hasNext()) {
-         ObjectNode relation = (ObjectNode) relations.next();
-       //  log.info("fieldnameastext rel={} val={}",relation.findValuesAsText("rel").toArray()[0],relation.findValues("val").toArray()[0]);
-         String rel = (String) relation.findValuesAsText("rel").toArray()[0];
-         String val = (String) relation.findValuesAsText("val").toArray()[0];
-         this.addRelation(new Relation(rel,val));
-     }
-     
-     // now add items to the hypercat
-     // all items in the Items collection are forced into Item objects, even though they may actually be hypercats.
-     // items in the items collection of a cat. only have an href and a collection of Relations. 
-     //The child Items of an added hypercat are ignored here
-     
-     JsonNode itemsNode = rootNode.path("items");
-     //log.info("itemsnode="+itemsNode.toString());    
-     Iterator<JsonNode> items = itemsNode.getElements();
-     while (items.hasNext()) {
+        log.info("creating new hypercat from JSON string");
 
-         Item item = new Item();
-         Relation reln = null;
+        // would use Jackson's JSONCreator functions here, except it appears to
+        // have a problem with HashMaps - it cannot reliably handle parsing into
+        // a Map
+        // So we have to do it manually, retrieve the maps as Arraylists and
+        // convert them into HashMaps
 
-         ObjectNode itemNode = (ObjectNode) items.next();
-         //log.info("item json={}",item.toString());
-         
-         //first get Item href
-         String itemHref = itemNode.findValue("href").toString();
-         //log.info("href for item={}",itemHref);      
-         item.setHref(itemHref);
-         
-         // then get list of metadata relations and add them to i-object-metadata    
-         JsonNode iomdNode = itemNode.path("i-object-metadata");
-         relations = iomdNode.getElements();
-         //log.info("node-status="+iomdNode.isArray());
-         //log.info("item array={}",relations.toString());
-         while (relations.hasNext()) {
-            ObjectNode relation = (ObjectNode ) relations.next();
-            //log.info("relobject = ={}",relation.getClass());
-            
-            //log.info("fieldnameastext rel={} val={}",relation.findValuesAsText("rel").toArray()[0],relation.findValues("val").toArray()[0]);
+        JsonNode rootNode = mapper.readTree(jsonString);
+        JsonNode hrefNode = rootNode.path("href");
+        // log.info("hrefnode value={}",hrefNode.getTextValue());
+
+        JsonNode relationsNode = rootNode.path("item-metadata");
+
+        Iterator<JsonNode> relations = relationsNode.getElements();
+        while (relations.hasNext()) {
+            ObjectNode relation = (ObjectNode) relations.next();
+            // log.info("fieldnameastext rel={} val={}",relation.findValuesAsText("rel").toArray()[0],relation.findValues("val").toArray()[0]);
             String rel = (String) relation.findValuesAsText("rel").toArray()[0];
             String val = (String) relation.findValuesAsText("val").toArray()[0];
-            reln = new Relation(rel,val);
-           // log.info("in HCJsonCreator - relation being added = {} {}",reln.rel,reln.val);
-            //item.addRelation(reln);
-            
-            item.getIObjectMetadata().add(reln);
-          //  log.info("SIZE of item metadata JUST after adding reln with val contents {} is= {}",reln.val,item.getIObjectMetadata().size());
-            
-          //  log.info("item metadata JUST after adding is="+item.getIObjectMetadata().get(0));
+            this.addRelation(new Relation(rel, val));
+        }
 
-         }
-         
-         // finally, add the item to the hypercat's items collection
-         //try adding item manually to items
-         
-       //  log.info("adding item to items collection with value"+item.getIObjectMetadata().toString());
-         this.items.put(itemHref, item);
-         
-         
-        Item itout =  (Item) this.getItems().get(itemHref);
-         
-    //     log.info("itemobject is "+itout.getClass());
-    //     log.info("itemobject has rels collecton "+itout.getIObjectMetadata().toString());        
-     }
+        // now add items to the hypercat
+        // all items in the Items collection are forced into Item objects, even
+        // though they may actually be hypercats.
+        // items in the items collection of a cat. only have an href and a
+        // collection of Relations.
+        // The child Items of an added hypercat are ignored here
+
+        JsonNode itemsNode = rootNode.path("items");
+        // log.info("itemsnode="+itemsNode.toString());
+        Iterator<JsonNode> items = itemsNode.getElements();
+        while (items.hasNext()) {
+
+            Item item = new Item();
+            Relation reln = null;
+
+            ObjectNode itemNode = (ObjectNode) items.next();
+            // log.info("item json={}",item.toString());
+
+            // first get Item href
+            String itemHref = itemNode.findValue("href").toString();
+            // log.info("href for item={}",itemHref);
+            item.setHref(itemHref);
+
+            // then get list of metadata relations and add them to
+            // i-object-metadata
+            JsonNode iomdNode = itemNode.path("i-object-metadata");
+            relations = iomdNode.getElements();
+            // log.info("node-status="+iomdNode.isArray());
+            // log.info("item array={}",relations.toString());
+            while (relations.hasNext()) {
+                ObjectNode relation = (ObjectNode) relations.next();
+                // log.info("relobject = ={}",relation.getClass());
+
+                // log.info("fieldnameastext rel={} val={}",relation.findValuesAsText("rel").toArray()[0],relation.findValues("val").toArray()[0]);
+                String rel = (String) relation.findValuesAsText("rel").toArray()[0];
+                String val = (String) relation.findValuesAsText("val").toArray()[0];
+                reln = new Relation(rel, val);
+                // log.info("in HCJsonCreator - relation being added = {} {}",reln.rel,reln.val);
+                // item.addRelation(reln);
+
+                item.getIObjectMetadata().add(reln);
+                // log.info("SIZE of item metadata JUST after adding reln with val contents {} is= {}",reln.val,item.getIObjectMetadata().size());
+
+                // log.info("item metadata JUST after adding is="+item.getIObjectMetadata().get(0));
+
+            }
+
+            // finally, add the item to the hypercat's items collection
+            // try adding item manually to items
+
+            // log.info("adding item to items collection with value"+item.getIObjectMetadata().toString());
+            this.items.put(itemHref, item);
+
+            // Item itout = (Item) this.getItems().get(itemHref);
+
+            // log.info("itemobject is "+itout.getClass());
+            // log.info("itemobject has rels collecton "+itout.getIObjectMetadata().toString());
+        }
     }
-    
 
-   /**
-    * constructs an Hypercat object from a textfile containing a valid JSON description
-    * @param fr - a FileReader object pointing at the text-file containing the definition
-    */
-    public Hypercat(FileReader fr) throws JsonParseException, JsonMappingException, IOException {  
-        this(getJsonString(fr),true);      
-    }
- 
-
-    
-  // hypercat functions  
-    
-    
-    /** adds a Relation object to the Hypercat's metadata-collection ("item--metadata")
+    /**
+     * constructs an Hypercat object from a textfile containing a valid JSON
+     * description
      * 
-     * @param rel - the relation object to add - (MUST be of type org.openIOT.Relation)
+     * @param fr
+     *            - a FileReader object pointing at the text-file containing the
+     *            definition
      */
-    public void addRelation( Relation rel){
-        log.info("relation being added"+ rel.rel);
-        itemMetadata.add(rel);     
+    public Hypercat(FileReader fr) throws JsonParseException, JsonMappingException, IOException {
+        this(getJsonStringFromFileReader(fr), true);
     }
-    
-    /** removes a Relation object from the Hypercat's metadata-collection ("item--metadata")
+
+    // hypercat functions
+
+    /**
+     * adds a Relation object to the Hypercat's metadata-collection
+     * ("item--metadata")
      * 
-     * @param rel - the relation object to remove - (MUST be of type org.openIOT.Relation)
+     * @param rel
+     *            - the relation object to add - (MUST be of type
+     *            org.openIOT.Relation)
      */
-    public void removeRelation(Relation rel){
-        itemMetadata.remove(rel);      
+    public void addRelation(Relation rel) {
+        // log.info("relation being added"+ rel.rel);
+        itemMetadata.add(rel);
     }
-    
-    /** returns the first relation object in the metadata collection whose 'rel' label exactly matches the supplied relLabel parameter
+
+    /**
+     * removes a Relation object from the Hypercat's metadata-collection
+     * ("item--metadata")
      * 
-     * @param relLabel - the rel label to search for (eg "urn:X-tsbiot:rels:hasDescription:en")
+     * @param rel
+     *            - the relation object to remove - (MUST be of type
+     *            org.openIOT.Relation)
+     */
+    public void removeRelation(Relation rel) {
+        itemMetadata.remove(rel);
+    }
+
+    /**
+     * returns the first relation object in the metadata collection whose 'rel'
+     * label exactly matches the supplied relLabel parameter
      * 
-     */ 
-    public Relation findFirstRelation(String relLabel){       
-        Relation rel  = new Relation();      
-        Iterator it = this.itemMetadata.iterator();       
-        while (it.hasNext()){
-            rel =(Relation) it.next();
-            if (rel.rel.equals(relLabel)) return rel;            
+     * @param relLabel
+     *            - the rel label to search for (eg
+     *            "urn:X-tsbiot:rels:hasDescription:en")
+     * 
+     */
+    public Relation findFirstRelation(String relLabel) {
+        Relation rel = new Relation();
+        Iterator it = this.itemMetadata.iterator();
+        while (it.hasNext()) {
+            rel = (Relation) it.next();
+            if (rel.rel.equals(relLabel))
+                return rel;
         }
         return null;
-     }
-      
-    /** returns an ArrayList containing all the relation objects in the metadata collection whose 'rel' label exactly matches the supplied relLabel parameter
-     * 
-     * @param relLabel - the rel label to search for (eg "urn:X-tsbiot:rels:hasDescription:en")
-     * 
-     */ 
-    public ArrayList<Relation> findAllRelations(String relLabel){       
-        ArrayList<Relation> relations  = new ArrayList<Relation>() ;
-        Relation rel  = new Relation();      
-        Iterator it = this.itemMetadata.iterator();       
-        while (it.hasNext()){
-            rel =(Relation) it.next();
-            if (rel.rel.equals(relLabel)) relations.add(rel);            
-        }
-        return relations;
-     }
-    
-    /** adds an Item object to the Hypercat's items collection.  If the item does not have an href, then one is automatically generated, and the 
-     * the addItem(href, object) method below is called to add the item
-     * 
-     * @param item - the item to add
-     */
-    public String addItem(Object item) {     
-        String href="";
-        log.info("class="+item.getClass());
-        
-        if ((Item.class).equals(item.getClass())) {          
-            Item res = (Item) item;
-            href=res.getHref();
-            log.info("href from item is"+href);
-        }
-         
-        if (href==null || "".equals(href)){
-            href=this.generateHref();
-        }
-       // log.info("in single-arg AddItem - href="+href);
-        
-        return addItem(item,href); 
-    }
-        
-        
-    /** adds an Item object to the Hypercat's items collection.   Returns the href of the added item 
-     * 
-     * @param item - the item to add
-     * @param href - an href that uniquely identifies the item within hte items collection.  If the href supplied is not unique, the item is not added
-     */
-    public String addItem(Object item, String href) {
- 
-        if (!items.containsKey(href) && href!=null &&!"".equals(href)){      
-            items.put(href, item);
-            //log.info("item  {} put into items list",href);
-            return href;         
-        }
-        else {
-           // log.info("item {} already exists!",href);
-            return "itemExists";    
-        }
-    }
-  
-    /** removes an item from the items collection
-     * 
-     * @param o - item to remove
-     */
-    public void removeItem(Object o){    
-       //if (items.containsKey(getKey(o))){
-           items.remove(o);       
     }
 
-    /** convenience method returning a HashMap <string,string> of the parameter contained in the query-string
+    /**
+     * returns an ArrayList containing all the relation objects in the metadata
+     * collection whose 'rel' label exactly matches the supplied relLabel
+     * parameter
      * 
-     * @param query - the querystring
+     * @param relLabel
+     *            - the rel label to search for (eg
+     *            "urn:X-tsbiot:rels:hasDescription:en")
+     * 
      */
-    public static HashMap<String, String> getQueryMap(String query)  
-    {  
-        String[] params = query.split("&");  
-        HashMap<String, String> map = new HashMap<String, String>();  
-        for (String param : params)  
-        {  
-            String name = param.split("=")[0];  
-            String value = param.split("=")[1];  
-            map.put(name, value);  
-        }  
-        return map;  
-    } 
-    
-  /** simple-search method.  in response to an input query-string, ths method returns an Hypercat containing those items that match the search-string
-   * 
-   * @param querystring - the query string 
-   * @return
-   */
-    public Hypercat searchCat (String querystring){
-        Hypercat hc = new Hypercat("Search results for querystring: "+querystring);
+    public ArrayList<Relation> findAllRelations(String relLabel) {
+        ArrayList<Relation> relations = new ArrayList<Relation>();
+        Relation rel = new Relation();
+        Iterator it = this.itemMetadata.iterator();
+        while (it.hasNext()) {
+            rel = (Relation) it.next();
+            if (rel.rel.equals(relLabel))
+                relations.add(rel);
+        }
+        return relations;
+    }
+
+    /**
+     * adds an Item object to the Hypercat's items collection. If the item does
+     * not have an href, then one is automatically generated, and the the
+     * addItem(href, object) method below is called to add the item
+     * 
+     * @param item
+     *            - the item to add
+     */
+    public String addItem(Object item) {
+        String href = "";
+        // log.info("class="+item.getClass());
+
+        if ((Item.class).equals(item.getClass())) {
+            Item res = (Item) item;
+            href = res.getHref();
+            //log.info("href from item is" + href);
+        }
+
+        if (href == null || "".equals(href)) {
+            href = this.generateHref();
+        }
+        // log.info("in single-arg AddItem - href="+href);
+
+        return addItem(item, href);
+    }
+
+    /**
+     * adds an Item object to the Hypercat's items collection. Returns the href
+     * of the added item
+     * 
+     * @param item
+     *            - the item to add
+     * @param href
+     *            - an href that uniquely identifies the item within hte items
+     *            collection. If the href supplied is not unique, the item is
+     *            not added
+     */
+    public String addItem(Object item, String href) {
+
+        if (!items.containsKey(href) && href != null && !"".equals(href)) {
+            items.put(href, item);
+            // log.info("item  {} put into items list",href);
+            return href;
+        }
+        else {
+            // log.info("item {} already exists!",href);
+            return "itemExists";
+        }
+    }
+
+    /**
+     * removes an item from the items collection
+     * 
+     * @param o
+     *            - item to remove
+     */
+    public void removeItem(Object o) {
+        // if (items.containsKey(getKey(o))){
+        items.remove(o);
+    }
+
+    /**
+     * convenience method returning a HashMap <string,string> of the parameter
+     * contained in the query-string
+     * 
+     * @param query
+     *            - the querystring
+     */
+    public static HashMap<String, String> getQueryMap(String query)
+    {
+        String[] params = query.split("&");
+        HashMap<String, String> map = new HashMap<String, String>();
+        for (String param : params)
+        {
+            String name = param.split("=")[0];
+            String value = param.split("=")[1];
+            map.put(name, value);
+        }
+        return map;
+    }
+
+    /**
+     * simple-search method. in response to an input query-string, ths method
+     * returns an Hypercat containing those items that match the search-string
+     * 
+     * @param querystring
+     *            - the query string
+     * @return
+     */
+    public Hypercat searchCat(String querystring) {
+        Hypercat hc = new Hypercat("Search results for querystring: " + querystring);
         HashMap qmap = getQueryMap(querystring);
         String hrefQuery = (String) qmap.get("href");
         String relQuery = (String) qmap.get("rel");
         String valQuery = (String) qmap.get("val");
-        HashMap <String, Item> relResults = new HashMap<String, Item>();
-        HashMap <String, Item> valResults = new HashMap<String, Item>();
-        boolean relQueryPresent = (!"".equals(relQuery) && relQuery!=null); 
-        boolean valQueryPresent = (!"".equals(valQuery) && valQuery!=null); 
-        log.info("this-itemslist-keyset="+this.getItems().entrySet().toString());
+        HashMap<String, Item> relResults = new HashMap<String, Item>();
+        HashMap<String, Item> valResults = new HashMap<String, Item>();
+        boolean relQueryPresent = (!"".equals(relQuery) && relQuery != null);
+        boolean valQueryPresent = (!"".equals(valQuery) && valQuery != null);
+        // log.info("this-itemslist-keyset="+this.getItems().entrySet().toString());
 
-        Iterator it =  this.getItems().keySet().iterator(); 
-        while (it.hasNext()){
-            String key= (String) it.next();
-            Item res = (Item)this.getItems().get(key);
+        Iterator it = this.getItems().keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            Item res = (Item) this.getItems().get(key);
             String hrefstr = res.getHref().replace("\"", "");
-           
-            
-           //if the hypercat is a valid hypercat, this should only ever find zero or one items.  So if we find an item, immediately quit and return
-            if (!"".equals(hrefQuery) && hrefQuery!=null){  
-                //log.info("using key="+ key+" comparing query "+hrefQuery+ " to "+hrefstr);
-                if (hrefQuery.equals(hrefstr)){
+
+            // if the hypercat is a valid hypercat, this should only ever find
+            // zero or one items. So if we find an item, immediately quit and
+            // return
+            if (!"".equals(hrefQuery) && hrefQuery != null) {
+                // log.info("using key="+ key+" comparing query "+hrefQuery+
+                // " to "+hrefstr);
+                if (hrefQuery.equals(hrefstr)) {
                     hc.addItem(res);
-                    return(hc);              
-                }   
+                    return (hc);
+                }
             }
-          
-            /* this is a bit more complex, since the two queries may be additive.  However, there is no full logical search (no OR can be specified)
-             * The most straightforward method is to construct a HashMap of results for each query, returning one or the other for single queries
-             * and in the case of two non-null parameters, return the intersection-set
-             * If an OR parameter is added to the spec in future, the union of the two HashMaps could be returned
+
+            /*
+             * rel and val are a bit more complex, since the two queries may be
+             * additive. However, there is no full logical search (no OR can be
+             * specified) The most straightforward method is to construct a
+             * HashMap of results for each, returning one or the other for
+             * single parameters, and in the case of two parameters, returning
+             * the intersection-set. If an OR parameter is added to the spec in
+             * future, the union of the two HashMaps could be returned instead
              */
-            
+
             Iterator relIt = res.getIObjectMetadata().iterator();
 
-            
-            while (relIt.hasNext()){
-                
-                    Relation rel = (Relation) relIt.next();
-                    
-                    if (relQueryPresent  && relQuery.equals(rel.getRel())){
-                        if (!relResults.containsKey(res.getHref())) {
-                             relResults.put(res.getHref(), res);
-                        }
+            while (relIt.hasNext()) {
+
+                Relation rel = (Relation) relIt.next();
+
+                if (relQueryPresent && relQuery.equals(rel.getRel())) {
+                    if (!relResults.containsKey(res.getHref())) {
+                        relResults.put(res.getHref(), res);
                     }
-                      
-                    if (valQueryPresent  && valQuery.equals(rel.getVal())){
-                        if (!valResults.containsKey(res.getHref())) {
-                             valResults.put(res.getHref(), res);
-                        }
+                }
+
+                if (valQueryPresent && valQuery.equals(rel.getVal())) {
+                    if (!valResults.containsKey(res.getHref())) {
+                        valResults.put(res.getHref(), res);
                     }
+                }
             }
         }
-        
-        
-      if (relQueryPresent && !valQueryPresent) {
+
+        if (relQueryPresent && !valQueryPresent) {
             hc.getItems().putAll(relResults);
-      }
-      if (valQueryPresent && !relQueryPresent) {
-          hc.getItems().putAll(valResults);
-      }
-      if (valQueryPresent && relQueryPresent) {
-          hc.getItems().putAll(valResults);
-          hc.getItems().keySet().retainAll(relResults.keySet());
-      }
-     
-      return hc;      
-        
+        }
+        if (valQueryPresent && !relQueryPresent) {
+            hc.getItems().putAll(valResults);
+        }
+        if (valQueryPresent && relQueryPresent) {
+            hc.getItems().putAll(valResults);
+            hc.getItems().keySet().retainAll(relResults.keySet());
+        }
+
+        return hc;
+
     }
 
-/** convenience method for generating a new unique href
- */
-    public String generateHref() {       
-        return UUID.randomUUID().toString();     
-    }
-
-/** outputs a string of JSON contaning the Hypcercat's definition
- * 
- */
-    String toJson() throws JsonGenerationException, JsonMappingException, IOException{
-          String output = "NO JSON";
-          ObjectMapper mapper = new ObjectMapper();                 
-          output = mapper.writeValueAsString(this);
-          return output;
-    }
     /**
-     *  outputs a prettily-formatted indented string of JSON contaning the Hypcercat's definition
+     * convenience method for generating a new unique href
      */
-    String toPrettyJson() throws JsonGenerationException, JsonMappingException, IOException{
-          String output = "NO JSON";
-          ObjectMapper mapper = new ObjectMapper();                
-          output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);       
-          return output;
+    public String generateHref() {
+        return UUID.randomUUID().toString();
     }
-    
 
-    
+    /**
+     * convenience method returning a strng of JSON from a file containing it
+     * 
+     */
+    static String getJsonStringFromFileReader(FileReader fr) throws IOException {
+        String jsonString = "";
+
+        BufferedReader reader = new BufferedReader(fr);
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            jsonString += line;
+        }
+        return jsonString;
+    }
+
+    /**
+     * outputs a string of JSON contaning the Hypcercat's definition
+     * 
+     */
+    String toJson() throws JsonGenerationException, JsonMappingException, IOException {
+        String output = "NO JSON";
+        ObjectMapper mapper = new ObjectMapper();
+        output = mapper.writeValueAsString(this);
+        return output;
+    }
+
+    /**
+     * outputs a prettily-formatted indented string of JSON contaning the
+     * Hypcercat's definition
+     */
+    String toPrettyJson() throws JsonGenerationException, JsonMappingException, IOException {
+        String output = "NO JSON";
+        ObjectMapper mapper = new ObjectMapper();
+        output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+        return output;
+    }
+
     // getters and setters
     @JsonGetter("item-metadata")
-    public ArrayList<Relation> getItemMetadata(){
-        return this.itemMetadata; 
-     }
-     
-     public HashMap getItems(){
-         return this.items; 
-      }
-     
-     public void setItems(HashMap<String, Object> items) {
-         this.items = items;
-     }
- 
-     /** convenience method returning a strng of JSON from a file containing it
-      *
-      */
-     static String getJsonString(FileReader fr) throws IOException {
-         String jsonString = "";
-    
-         BufferedReader reader = new BufferedReader(fr);
-         String line = null;
-         while ((line = reader.readLine()) != null) {
-                 jsonString+=line;
-         }
-         return jsonString;
-     }
-    
+    public ArrayList<Relation> getItemMetadata() {
+        return this.itemMetadata;
+    }
+
+    public HashMap getItems() {
+        return this.items;
+    }
+
+    public void setItems(HashMap<String, Object> items) {
+        this.items = items;
+    }
 
 }
-
