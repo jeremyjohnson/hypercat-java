@@ -24,6 +24,10 @@
                 {
                     "rel": "urn:X-tsbiot:rels:hasDescription:en",
                     "val": "resource1"
+                },
+                {
+                    "rel": "urn:X-tsbiot:rels:isAnIntegerValue",
+                    "val": 3
                 }
              ]
         },
@@ -69,7 +73,25 @@
  			        "val": 3 
  			   }   
  			]
+	     },
+	     { 
+		    "href": "http://B",
+		    "i-object-metadata": [ 
+ 			   { 
+ 			        "rel": "urn:X-tsbiot:rels:1",
+ 			        "val": "1B" 
+ 			   },
+ 			   { 
+ 			        "rel":" urn:X-tsbiot:rels:2",
+ 			        "val": "2B" 
+ 			   },
+ 			   { 
+ 			        "rel":"urn:X-tsbiot:rels:3",
+ 			        "val": 3 
+ 			   }   
+ 			]
 	     }
+        
         
     ]
 }

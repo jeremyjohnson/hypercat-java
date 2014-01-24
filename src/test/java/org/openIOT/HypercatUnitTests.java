@@ -200,14 +200,37 @@ public class HypercatUnitTests {
         log.info("descrip rel from file="+rel.toString());
         Assert.assertEquals("Search Test Catalogue", rel.val);
         
+        
+        //test href search - should return hypercat with one item
         Hypercat results = hc.searchCat("href=http://A");
+         rel = (Relation) results.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+        Assert.assertEquals("Search results for querystring: href=http://A", rel.val);
+        Assert.assertEquals(1, results.getItems().size());
         log.info ("results hc = "+results.toPrettyJson());
         
+        //test rel search - should return a hypercat with two items
+         results = hc.searchCat("rel=urn:X-tsbiot:rels:1");
+         rel = (Relation) results.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+        Assert.assertEquals("Search results for querystring: rel=urn:X-tsbiot:rels:1", rel.val);
+        Assert.assertEquals(2, results.getItems().size());
+        log.info ("results hc = "+results.toPrettyJson());
+        
+        //test val search - should return a hypercat with three items
+        results = hc.searchCat("val=3");
+        rel = (Relation) results.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+       Assert.assertEquals("Search results for querystring: val=3", rel.val);
+       Assert.assertEquals(3, results.getItems().size());
+       log.info ("results hc = "+results.toPrettyJson());
+       
+       //test rel&val search - should return a hypercat with one item
+       results = hc.searchCat("rel=urn:X-tsbiot:rels:isAnIntegerValue&val=3");
+       rel = (Relation) results.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+      Assert.assertEquals("Search results for querystring: rel=urn:X-tsbiot:rels:isAnIntegerValue&val=3", rel.val);
+      Assert.assertEquals(1, results.getItems().size());
+      log.info ("results hc = "+results.toPrettyJson());
+
+        
     }
-    
-    
-    
-    
     
 
     String prettyPrint(Object o){

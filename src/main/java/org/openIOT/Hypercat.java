@@ -262,11 +262,15 @@ public class Hypercat {
     
   
     public Hypercat searchCat (String querystring){
-        Hypercat hc = new Hypercat("Search results for querystring >"+querystring+"<");
+        Hypercat hc = new Hypercat("Search results for querystring: "+querystring);
         HashMap qmap = getQueryMap(querystring);
         String hrefQuery = (String) qmap.get("href");
         String relQuery = (String) qmap.get("rel");
         String valQuery = (String) qmap.get("val");
+        HashMap <String, Resource> relResults = new HashMap<String, Resource>();
+        HashMap <String, Resource> valResults = new HashMap<String, Resource>();
+        boolean relQueryPresent = (!"".equals(relQuery) && relQuery!=null); 
+        boolean valQueryPresent = (!"".equals(valQuery) && valQuery!=null); 
         log.info("this-itemslist-keyset="+this.getItems().entrySet().toString());
 
         Iterator it =  this.getItems().keySet().iterator(); 
@@ -274,29 +278,57 @@ public class Hypercat {
             String key= (String) it.next();
             Resource res = (Resource)this.getItems().get(key);
             String hrefstr = res.getHref().replace("\"", "");
+           
+            
+           //if the hypercat is a valid hypercat, this should only ever find zero or one items.  So if we find an item, immediately quit and return
             if (!"".equals(hrefQuery) && hrefQuery!=null){  
                 //log.info("using key="+ key+" comparing query "+hrefQuery+ " to "+hrefstr);
                 if (hrefQuery.equals(hrefstr)){
                     hc.addItem(res);
+                    return(hc);              
                 }   
             }
+          
+            /* this is a bit more complex, since the two queries may be additive.  However, there is no full logical search (no OR can be specified)
+             * The most straightforward method is to construct a HashMap of results for each query, returning one or the other for single queries
+             * and in the case of two non-null parameters, return the intersection-set
+             * If an OR parameter is added to the spec in future, the sum of the two sets could be returned
+             */
             
             Iterator relIt = res.getIObjectMetadata().iterator();
+
+            
             while (relIt.hasNext()){
+                
                     Relation rel = (Relation) relIt.next();
-                    if (!"".equals(relQuery) && relQuery!=null){
-                        if (!hc.getItems().containsKey(res.getHref()) && relQuery.equals(rel.getRel())){
-                            hc.addItem(res);
-                        } 
+                    
+                    if (relQueryPresent  && relQuery.equals(rel.getRel())){
+                        if (!relResults.containsKey(res.getHref())) {
+                             relResults.put(res.getHref(), res);
+                        }
                     }
-                    if (!"".equals(valQuery) && valQuery!=null){
-                        if (!hc.getItems().containsKey(res.getHref()) && valQuery.equals(rel.getVal())){
-                            hc.addItem(res);
-                        } 
+                      
+                    if (valQueryPresent  && valQuery.equals(rel.getVal())){
+                        if (!valResults.containsKey(res.getHref())) {
+                             valResults.put(res.getHref(), res);
+                        }
                     }
-            }          
+            }
         }
-        return hc;      
+        
+        
+      if (relQueryPresent && !valQueryPresent) {
+            hc.getItems().putAll(relResults);
+      }
+      if (valQueryPresent && !relQueryPresent) {
+          hc.getItems().putAll(valResults);
+      }
+      if (valQueryPresent && relQueryPresent) {
+          hc.getItems().putAll(valResults);
+          hc.getItems().keySet().retainAll(relResults.keySet());
+      }
+     
+      return hc;      
         
     }
 
