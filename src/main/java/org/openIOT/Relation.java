@@ -1,11 +1,8 @@
 package org.openIOT;
 
 import java.util.LinkedHashMap;
-
-public class Relation {
-    
-    /*
-     * from Spec 1.1:
+/** The metadadta RElation object, representing a single metadata relation as defined by the 1.1 spec
+ * from Spec 1.1:
      * A metadata object (Relation) is a JSON object which describes a single relationship between the parent object 
      * (either the catalogue or catalogue item) and some other entity or concept denoted by a URI. 
      * 
@@ -22,6 +19,14 @@ public class Relation {
      *
      *This class represents a single metadata Relation
      *
+ * 
+ * @author jdj
+ *
+ */
+public class Relation {
+    
+    /*
+     
      */
     
     public String rel;  // eg “urn:X-tsbiot:rels:isContentType” - name of relation
