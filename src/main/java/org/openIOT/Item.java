@@ -19,31 +19,33 @@ import org.slf4j.LoggerFactory;
 /**
  * This class represents the Item object in the Hypercat 1.1 spec. See below for
  * definition.
- * 
- * (Spec. para 4.3.1) An “Item” object is a JSON object, which MUST contain all
+ * <p>
+ * (Spec. para 4.3.1)<p> An "Item" object is a JSON object, which MUST contain all
  * of the following properties:
- * 
- * “href” - Identifier for the resource item - value of this must be a URI
- * formatted as as a JSON string “i-object-metadata” - an array of metadata
+ * <p>
+ * "href"- Identifier for the resource item - value of this must be a URI
+ * formatted as as a JSON string 
+ * <p>
+ * "i-object-metadata"- an array of metadata
  * objects (Relations) describing the resource item.
- * 
+ * <p>
  * The metadata array for Items MAY contain multiple metadata objects with the
  * same rel (and val) properties
- * 
+ * <p> 
  * The metadata array for Items MUST contain a metadata object for each of the
  * mandatory metadata object relationships. for the Item object, these are:
- * 
- * rel: “urn:X-tsbiot:rels:hasDescription:en” val: [string with URN description
- * of Item] rel: “urn:X-tsbiot:rels:isContentType” val: [string with URN
+ * <p>
+ * rel: "urn:X-tsbiot:rels:hasDescription:en"val: [string with URN description
+ * of Item] rel: "urn:X-tsbiot:rels:isContentType"val: [string with URN
  * describing type of data provided by the Item]
- * 
- * 
+ * <p>
  * eg: { "rel": "urn:X-tsbiot:rels:hasDescription:en", "val": "test item" } {
  * "rel": "urn:X-tsbiot:rels:isContentType", "val":
  * "application/vnd.tsbiot.catalogue+json" }
- * 
- * the basic constructor for Item enforces this by requiring a non-null String
- * carrying the description, and a non-null string carrying the content-type
+ * <p>
+ * the basic constructor for Item enforces this by invoking a validator 
+ * this requires the item to have Relations for contentType and hasDescription
+ * and the values for these two relations to be a  non-null String
  **/
 
 public class Item {
@@ -80,6 +82,11 @@ public class Item {
         this.iObjectMetadata.add(descriptionRel);
         Relation contentTypeRel = new Relation("urn:X-tsbiot:rels:isContentType", contentType);
         this.iObjectMetadata.add(contentTypeRel);
+        
+        String validated = validateItem(this);
+        if (!"VALID".equals(validated)) {
+            throw new InvalidItemException("Item is NOT VALID: +validated");
+            };
 
         //log.info("Item created with href={} ", this.href);
     }
@@ -129,6 +136,10 @@ public class Item {
             String val = (String) relation.findValuesAsText("val").toArray()[0];
             this.addRelation(new Relation(rel, val));
         }
+        String validated = validateItem(this);
+        if (!"VALID".equals(validated)) {
+            throw new InvalidItemException("Item is NOT VALID: +validated");
+            };
     }
 
     /**
@@ -284,5 +295,40 @@ public class Item {
         output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
         return output;
     }
+    
+    /**
+     * Convenience method to ensure hypercat meets the minimum 1.1 specification.  
+     * Returns the string "VALID" if successful, and "INVALID" followed by 
+     * the reason for failure if unsuccessful
+     * 
+     * @param i - the hypercat to be validated
+     */
+    public String validateItem(Item i){
+        //hypercat validation-check - checks that Item has a non-null href
+        // and has a relation with non-null content-type
+        
+          if ("".equals(i.getHref()) || i.getHref()==null) {
+             return "INVALID Item - no Href";
+          }
+          
+          Relation rel = (Relation) i.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+          if (rel==null) {
+              return "INVALID Item - no relation of type rel=urn:X-tsbiot:rels:hasDescription:en is present in item-metadata";
+          }
+          
+          if (rel.getVal()==null || "".equals(rel.getVal())) {
+              return  "INVALID Item - relation of type rel=urn:X-tsbiot:rels:hasDescription:en is null or zero-length"; 
+          }
+              
+          rel = (Relation) i.findFirstRelation("urn:X-tsbiot:rels:isContentType");
+              if (rel==null) {
+                  return "INVALID Item - no relation of type rel=urn:X-tsbiot:rels:isContentType is present in item-metadata";
+              }           
+          if ("".equals(rel.getVal()) || rel.getVal()==null) {
+                  return  "INVALID Item - content-type is not defined, or definition is of zero-length ";         
+          }
+         
+        return "VALID";         
+      }
 
 }

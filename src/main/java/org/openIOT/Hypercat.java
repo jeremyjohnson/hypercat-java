@@ -13,8 +13,11 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonGetter;
 import org.codehaus.jackson.annotate.JsonProperty;
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectWriter;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,34 +25,38 @@ import org.slf4j.LoggerFactory;
 /**
  * This class represents the Hypercat object as dedfined in the 1.1 spec.
  * (below)
- * 
- * (Spec. para 4.3) defining a HyperCat: A "Catalogue” object is a JSON object,
+ * <p>
+ * (Spec. para 4.3) defining a HyperCat:<p>
+ *  A "Catalogue"object is a JSON object,
  * which MUST contain all of the following properties:
- * 
- * “items” - a list of the items contained by the catalogue - value of this must
- * be JSON array of zero or more JSON objects “item-metadata” - an array of
+ * <p>
+ * "items"- a list of the items contained by the catalogue - value of this must
+ * be JSON array of zero or more JSON objects
+ * <p>
+ *  "item-metadata"- an array of
  * metadata objects (Relations) describing the catalogue. value of this must be
  * JSON array of metadata objects
- * 
+ * <p>
  * (note that it is NOT mandatory for a catalogue to bear a unique href or id,
  * although it MAY do so as a metadata relation.)
- * 
+ * <p>
  * The metadata array for Catalogues MAY contain multiple metadata objects with
  * the same rel (and val) properties
- * 
+ * <p>
  * The metadata array for Catalogues MUST contain a metadata object for each of
  * the mandatory metadata object relationships. for the Catalogue object, these
  * are:
- * 
- * rel: “urn:X-tsbiot:rels:hasDescription:en” val: [string with URN description
+ * <p>
+ * rel: "urn:X-tsbiot:rels:hasDescription:en"val: [string with URN description
  * of Catalogue]
- * 
+ * <p>
  * eg: { "rel": "urn:X-tsbiot:rels:hasDescription:en", "val": "test catalogue" }
- * 
- * the constructor for a basic Hypercat enforces this by requiring a non-null
- * String carrying the description
+ * <p>
+ * the constructors for Hypercat enforce this by requiring a metadata 
+ * relation to be present for hasDescription, and for this to have a non-null
+ * String as a value
  */
-
+@JsonPropertyOrder({ "item-metadata", "items" })
 public class Hypercat {
 
     @JsonProperty("item-metadata")
@@ -58,6 +65,7 @@ public class Hypercat {
 
     private Logger log = LoggerFactory.getLogger(Hypercat.class);
     private ObjectMapper mapper = new ObjectMapper();
+    
 
     // HyperCat constructors.
     /**
@@ -72,7 +80,7 @@ public class Hypercat {
      * string parameter which should contain a text-description of the hypercat
      * 
      * @param description
-     *            - a test strng which should contain a text-description of the
+     *            - a test string which should contain a text-description of the
      *            hypercat
      */
     public Hypercat(String description) {
@@ -84,6 +92,10 @@ public class Hypercat {
         // log.info(" in HC constructor - relation {} created with value {}",descriptionRel.rel,descriptionRel.val
         // );
         addRelation(descriptionRel);
+        String validated = validateHypercat(this);
+        if (!"VALID".equals(validated)) {
+            throw new InvalidHypercatException("hypercat is NOT VALID: +validated");
+            };     
     }
 
     /**
@@ -110,7 +122,7 @@ public class Hypercat {
         // convert them into HashMaps
 
         JsonNode rootNode = mapper.readTree(jsonString);
-        JsonNode hrefNode = rootNode.path("href");
+        //JsonNode hrefNode = rootNode.path("href");
         // log.info("hrefnode value={}",hrefNode.getTextValue());
 
         JsonNode relationsNode = rootNode.path("item-metadata");
@@ -181,8 +193,17 @@ public class Hypercat {
 
             // log.info("itemobject is "+itout.getClass());
             // log.info("itemobject has rels collecton "+itout.getIObjectMetadata().toString());
+            
         }
+        
+        String validated = validateHypercat(this);
+        if (!"VALID".equals(validated)) {
+            throw new InvalidHypercatException("hypercat is NOT VALID: +validated");
+            };
+        
     }
+    
+
 
     /**
      * constructs an Hypercat object from a textfile containing a valid JSON
@@ -194,6 +215,7 @@ public class Hypercat {
      */
     public Hypercat(FileReader fr) throws JsonParseException, JsonMappingException, IOException {
         this(getJsonStringFromFileReader(fr), true);
+        
     }
 
     // hypercat functions
@@ -259,7 +281,8 @@ public class Hypercat {
         Iterator it = this.itemMetadata.iterator();
         while (it.hasNext()) {
             rel = (Relation) it.next();
-            if (rel.rel.equals(relLabel))
+            log.info("comparing {} with {})",relLabel,rel.getRel()) ;
+            if (rel.getRel().equals(relLabel))
                 relations.add(rel);
         }
         return relations;
@@ -269,10 +292,11 @@ public class Hypercat {
      * adds an hypercat  to the Hypercat's items collection. A new Item is created, and
      * the metadata collection from the hypercat is copied to it.  
      * If an Href is not provided, then then one is automatically generated, and the
-     * addItem(href, object) method below is called to add the item.  If the object is 
+     * addItem(href, object) method below is called to add the item.  Returns the href
+     * of the added item.
      * 
-     * @param item - the item to add
-     * @prarm href - the href to uniquely identify the item
+     * @param hc - the item to add
+     * @param href - the href to uniquely identify the item
      */
     public String addItem(Hypercat hc, String href) {
       
@@ -339,6 +363,25 @@ public class Hypercat {
         }
         return map;
     }
+    
+    /**
+     * Convenience method to ensure hypercat meets the minimum 1.1 specification.  
+     * Returns the string "VALID" if successful, and "INVALID" followed by 
+     * the reason for failure if unsuccessful
+     * 
+     * @param hc - the hypercat to be validated
+     */
+    public String validateHypercat(Hypercat hc){
+        //hypercat validation-check - checks that Hypercat has a relation with non-null content-type
+          
+          Relation rel = (Relation) hc.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+          if (rel==null) return "INVALID HyperCat - no relation of type rel=urn:X-tsbiot:rels:hasDescription:en is present in item-metadata";
+          
+          if (rel.getVal()==null || "".equals(rel.getVal())) {
+              return  "INVALID HyperCat - relation of type rel=urn:X-tsbiot:rels:hasDescription:en is null or zero-length";        
+          }
+        return "VALID";         
+      }
 
     /**
      * simple-search method. in response to an input query-string, ths method
@@ -346,7 +389,6 @@ public class Hypercat {
      * 
      * @param querystring
      *            - the query string
-     * @return
      */
     public Hypercat searchCat(String querystring) {
         Hypercat hc = new Hypercat("Search results for querystring: " + querystring);
@@ -450,6 +492,7 @@ public class Hypercat {
      * 
      */
     String toJson() throws JsonGenerationException, JsonMappingException, IOException {
+
         String output = "NO JSON";
         ObjectMapper mapper = new ObjectMapper();
         output = mapper.writeValueAsString(this);

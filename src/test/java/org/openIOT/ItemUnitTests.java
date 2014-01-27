@@ -39,6 +39,12 @@ public class ItemUnitTests {
 
         log.info("testitem toString=" + i.toString());
         log.info("testitem PP = " + i.toPrettyJson());
+        
+        i.addRelation(new Relation("urn:X-tsbiot:rels:1","A"));
+        i.addRelation(new Relation("urn:X-tsbiot:rels:1","B"));
+        i.addRelation(new Relation("urn:X-tsbiot:rels:1","C"));
+        String rels = i.findAllRelations("urn:X-tsbiot:rels:1").toString();
+        Assert.assertEquals("[rel=urn:X-tsbiot:rels:1val=A, rel=urn:X-tsbiot:rels:1val=B, rel=urn:X-tsbiot:rels:1val=C]",rels);
 
     }
 

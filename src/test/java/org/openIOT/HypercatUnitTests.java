@@ -93,13 +93,23 @@ public class HypercatUnitTests {
         // test added item is on list, and can be retrieved from it
         Assert.assertEquals(2, hc.getItems().size());
 
-        Item hc5 = (Item) hc.getItems().get(autoHref);
-        log.info(" hc5 HC =" + hc5.toString());
-        Relation rel3 = (Relation) hc5.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
-        log.info("rel metatdata from hc5=" + rel3.val);
+        Item i5 = (Item) hc.getItems().get(autoHref);
+        log.info(" hc5 HC =" + i5.toString());
+        Relation rel3 = (Relation) i5.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
+        log.info("rel metatdata from i5=" + rel3.val);
         // Assert.assertEquals(autoHref, ( (Hypercat)
         // (hc.getItems().get(autoHref))).getHref() );
         Assert.assertEquals("child hypercat with automatically-set href", rel3.getVal());
+        
+        
+        
+        //test findAllRelations
+        
+        hc.addRelation(new Relation("urn:X-tsbiot:rels:1","A"));
+        hc.addRelation(new Relation("urn:X-tsbiot:rels:1","B"));
+        hc.addRelation(new Relation("urn:X-tsbiot:rels:1","C"));
+        String rels = hc.findAllRelations("urn:X-tsbiot:rels:1").toString();
+        Assert.assertEquals("[rel=urn:X-tsbiot:rels:1val=A, rel=urn:X-tsbiot:rels:1val=B, rel=urn:X-tsbiot:rels:1val=C]",rels);
 
         // test that adding the same hypercat again fails
         String localUID = hc.addItem(hc4, autoHref);
@@ -128,11 +138,11 @@ public class HypercatUnitTests {
     public void testJsonFunctions() throws JsonGenerationException, JsonMappingException, IOException {
         Hypercat hc6 = null;
         // test construct-hypercat-from-JSON-string
-        String jsonString = "{ \"item-metadata\": [{  \"rel\": \"urn:X-tsbiot:rels:isContentType\",  \"val\": \"application/vnd.tsbiot.catalogue+json\"  }, {\"rel\": \"urn:X-tsbiot:rels:hasDescription:en\",  \"val\": \"Test Description\"  } ],"
-                + " \"items\": ["
-                + "{  \"href\": \"http://FIXME\",  \"i-object-metadata\": [  { \"rel\": \"urn:X-tsbiot:rels:isContentType\",  \"val\": \"application/vnd.tsbiot.catalogue+json\"  },{ \"rel\": \"urn:X-tsbiot:rels:hasDescription:en\", \"val\": \"resource1\" }  ] },"
-                + "{  \"href\": \"http://FIXME2\", \"i-object-metadata\": [  { \"rel\": \"urn:X-tsbiot:rels:isContentType\",  \"val\": \"application/vnd.tsbiot.catalogue+json\"  },{ \"rel\": \"urn:X-tsbiot:rels:hasDescription:en\", \"val\": \"resource2\" }  ] } "
-                + "] }";
+        String jsonString = "{\"item-metadata\":[{\"rel\":\"urn:X-tsbiot:rels:isContentType\",\"val\":\"application/vnd.tsbiot.catalogue+json\"},{\"rel\":\"urn:X-tsbiot:rels:hasDescription:en\",\"val\":\"Test Description\"}],"
+                + "\"items\":["
+                + "{\"href\":\"http://FIXME\",\"i-object-metadata\":[{\"rel\":\"urn:X-tsbiot:rels:isContentType\",\"val\":\"application/vnd.tsbiot.catalogue+json\"},{\"rel\":\"urn:X-tsbiot:rels:hasDescription:en\",\"val\":\"resource1\"}]},"
+                + "{\"href\":\"http://FIXME2\",\"i-object-metadata\":[{\"rel\":\"urn:X-tsbiot:rels:isContentType\",\"val\":\"application/vnd.tsbiot.catalogue+json\"},{\"rel\":\"urn:X-tsbiot:rels:hasDescription:en\",\"val\":\"resource2\"}]} "
+                + "]}";
 
         log.info("about to create Hypercat object by parsing : " + jsonString);
 
@@ -152,6 +162,13 @@ public class HypercatUnitTests {
 
         Relation rel = (Relation) hc6.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
         Assert.assertEquals("Test Description", rel.val);
+        
+        
+        //test toJson function
+        log.info("IMD="+hc6.getItemMetadata().toString());
+        log.info("toJson="+hc6.toJson());
+        log.info("jsonSt="+jsonString);
+   //     Assert.assertEquals(jsonString,hc6.toJson());
 
         log.info("itemslist =" + hc6.getItems().toString());
 
@@ -165,6 +182,8 @@ public class HypercatUnitTests {
         log.info("itemobject class for key={} is {} ", key, itout.getClass());
 
         // log.info("itout href={}",itout.getHref());
+        
+
 
         Item hydratedItem = (Item) itout;
         String output = "";
@@ -223,7 +242,8 @@ public class HypercatUnitTests {
         log.info("created HC from file:" + hc.toPrettyJson());
         log.info("hc has item-metadata lt of size=" + hc.getItemMetadata().size());
         Relation rel = (Relation) hc.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
-        log.info("descrip rel from file=" + rel.toString());
+        log.info("descrip rel from file=" + rel.toString());                
+        
         Assert.assertEquals("Search Test Catalogue", rel.val);
 
         // test href search - should return hypercat with one item
@@ -231,7 +251,7 @@ public class HypercatUnitTests {
         rel = (Relation) results.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");
         Assert.assertEquals("Search results for querystring: href=http://A", rel.val);
         Assert.assertEquals(1, results.getItems().size());
-        log.info("results hc = " + results.toPrettyJson());
+      log.info("results hc = " + results.toPrettyJson());
 
         // test rel search - should return a hypercat with two items
         results = hc.searchCat("rel=urn:X-tsbiot:rels:1");
@@ -253,6 +273,9 @@ public class HypercatUnitTests {
         Assert.assertEquals("Search results for querystring: rel=urn:X-tsbiot:rels:isAnIntegerValue&val=3", rel.val);
         Assert.assertEquals(1, results.getItems().size());
         log.info("results hc = " + results.toPrettyJson());
+        
+        
+
     }
 
     String prettyPrint(Object o) throws JsonGenerationException, JsonMappingException, IOException {

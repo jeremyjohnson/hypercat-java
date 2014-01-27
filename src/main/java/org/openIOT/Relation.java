@@ -11,12 +11,12 @@ import java.util.LinkedHashMap;
  * 
  * All metadata objects MUST include all of the following properties:
  * 
- * “rel” -A relationship between the parent object and a target noun, expressed
+ *"rel"-A relationship between the parent object and a target noun, expressed
  * as a predicate (verb). The value of this is the URI of the relationship as a
  * JSON string
  * 
  * 
- * “val” The entity (noun) to which the rel property applies. The value of this
+ *"val"The entity (noun) to which the rel property applies. The value of this
  * is the URI of the concept or entity as a JSON string
  * 
  * example: item-metadata":{ "rel": "urn:X-tsbiot:rels:isContentType", "val": "
@@ -30,7 +30,7 @@ import java.util.LinkedHashMap;
  */
 public class Relation {
 
-    public String rel; // eg “urn:X-tsbiot:rels:isContentType” - name of
+    public String rel; // eg"urn:X-tsbiot:rels:isContentType"- name of
                        // relation
     public String val; // eg "application/vnd.tsbiot.catalogue+json" - MUST be a
                        // URI
