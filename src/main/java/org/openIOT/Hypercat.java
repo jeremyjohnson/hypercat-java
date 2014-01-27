@@ -54,7 +54,7 @@ public class Hypercat {
 
     @JsonProperty("item-metadata")
     private ArrayList<Relation> itemMetadata;
-    private HashMap<String, Object> items;
+    private HashMap<String, Item> items;
 
     private Logger log = LoggerFactory.getLogger(Hypercat.class);
     private ObjectMapper mapper = new ObjectMapper();
@@ -79,7 +79,7 @@ public class Hypercat {
         super();
         log.info("creating new hypercat");
         itemMetadata = new ArrayList<Relation>();
-        items = new HashMap<String, Object>();
+        items = new HashMap<String, Item>();
         Relation descriptionRel = new Relation("urn:X-tsbiot:rels:hasDescription:en", description);
         // log.info(" in HC constructor - relation {} created with value {}",descriptionRel.rel,descriptionRel.val
         // );
@@ -99,7 +99,7 @@ public class Hypercat {
     public Hypercat(String jsonString, boolean isJSON) throws JsonParseException, JsonMappingException, IOException {
 
         itemMetadata = new ArrayList<Relation>();
-        items = new HashMap<String, Object>();
+        items = new HashMap<String, Item>();
 
         log.info("creating new hypercat from JSON string");
 
@@ -266,28 +266,24 @@ public class Hypercat {
     }
 
     /**
-     * adds an Item object to the Hypercat's items collection. If the item does
-     * not have an href, then one is automatically generated, and the the
-     * addItem(href, object) method below is called to add the item
+     * adds an hypercat  to the Hypercat's items collection. A new Item is created, and
+     * the metadata collection from the hypercat is copied to it.  
+     * If an Href is not provided, then then one is automatically generated, and the
+     * addItem(href, object) method below is called to add the item.  If the object is 
      * 
-     * @param item
-     *            - the item to add
+     * @param item - the item to add
+     * @prarm href - the href to uniquely identify the item
      */
-    public String addItem(Object item) {
-        String href = "";
-        // log.info("class="+item.getClass());
-
-        if ((Item.class).equals(item.getClass())) {
-            Item res = (Item) item;
-            href = res.getHref();
-            //log.info("href from item is" + href);
-        }
-
+    public String addItem(Hypercat hc, String href) {
+      
         if (href == null || "".equals(href)) {
-            href = this.generateHref();
-        }
-        // log.info("in single-arg AddItem - href="+href);
-
+            href = generateHref();
+        }       
+        //flatten Hypercat into Item object for addition
+        ArrayList rels = hc.getItemMetadata();
+        Relation rel2 = (Relation) hc.findFirstRelation("urn:X-tsbiot:rels:hasDescription:en");  
+        Item item = new Item("href",rel2.getVal(),"application/vnd.tsbiot.catalogue+json");
+        item.setIObjectMetadata(rels);       
         return addItem(item, href);
     }
 
@@ -298,19 +294,17 @@ public class Hypercat {
      * @param item
      *            - the item to add
      * @param href
-     *            - an href that uniquely identifies the item within hte items
+     *            - an href that uniquely identifies the item within the items
      *            collection. If the href supplied is not unique, the item is
      *            not added
      */
-    public String addItem(Object item, String href) {
+    public String addItem(Item item, String href) {
 
         if (!items.containsKey(href) && href != null && !"".equals(href)) {
             items.put(href, item);
-            // log.info("item  {} put into items list",href);
             return href;
         }
         else {
-            // log.info("item {} already exists!",href);
             return "itemExists";
         }
     }
@@ -379,7 +373,7 @@ public class Hypercat {
                 // log.info("using key="+ key+" comparing query "+hrefQuery+
                 // " to "+hrefstr);
                 if (hrefQuery.equals(hrefstr)) {
-                    hc.addItem(res);
+                    hc.addItem(res,res.getHref());
                     return (hc);
                 }
             }
@@ -483,7 +477,7 @@ public class Hypercat {
         return this.items;
     }
 
-    public void setItems(HashMap<String, Object> items) {
+    public void setItems(HashMap<String, Item> items) {
         this.items = items;
     }
 
