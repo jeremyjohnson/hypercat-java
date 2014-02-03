@@ -1,7 +1,32 @@
 package org.openIOT;
 
 import java.util.LinkedHashMap;
+/* LICENCE INFORMATION for org.openIOT.Relation.java
 
+* Copyright (c) 2014 Jeremy Johnson / AlertMe Ltd.
+*  
+* Enables easy creation of valid metadata for Hypercat catalogues
+* Written to comply with IoT Ecosystems Demonstrator Interoperability Action Plan V1.0 24th June 2013
+* As found at http://www.openiot.org/apis
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 /**
  * The metadadta RElation object, representing a single metadata relation as
  * defined by the 1.1 spec from Spec 1.1: A metadata object (Relation) is a JSON
@@ -30,10 +55,8 @@ import java.util.LinkedHashMap;
  */
 public class Relation {
 
-    public String rel; // eg"urn:X-tsbiot:rels:isContentType"- name of
-                       // relation
-    public String val; // eg "application/vnd.tsbiot.catalogue+json" - MUST be a
-                       // URI
+    public String rel; //eg"urn:X-tsbiot:rels:isContentType"- name of relation
+    public String val; //eg "application/vnd.tsbiot.catalogue+json" MUST be a URI
 
     /**
      * default constructor required by Jackson

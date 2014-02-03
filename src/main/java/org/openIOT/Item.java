@@ -15,7 +15,32 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+/* LICENCE INFORMATION for org.openIOT.Item
 
+* Copyright (c) 2014 Jeremy Johnson / AlertMe Ltd.
+*  
+* Enables easy creation of valid Items for Hypercat catalogues
+* Written to comply with IoT Ecosystems Demonstrator Interoperability Action Plan V1.0 24th June 2013
+* As found at http://www.openiot.org/apis
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 /**
  * This class represents the Item object in the Hypercat 1.1 spec. See below for
  * definition.
@@ -87,8 +112,6 @@ public class Item {
         if (!"VALID".equals(validated)) {
             throw new InvalidItemException("Item is NOT VALID: +validated");
             };
-
-        //log.info("Item created with href={} ", this.href);
     }
 
     /**
@@ -111,8 +134,6 @@ public class Item {
 
         iObjectMetadata = new ArrayList<Relation>();
         href = "";
-        log.info("creating new Item from JSON string");
-
         /*
          * we would use Jackson's JSONCreator functions here, except it appears
          * to have a problem with HashMaps - it cannot reliably handle parsing
@@ -120,8 +141,6 @@ public class Item {
          */
         JsonNode rootNode = mapper.readTree(jsonString);
         JsonNode hrefNode = rootNode.path("href");
-        // log.info("hrefnode value={}", hrefNode.getTextValue());
-        // log.info("setting resource href to" + hrefNode.getTextValue());
         this.href = hrefNode.getTextValue();
 
         JsonNode relationsNode = rootNode.path("i-object-metadata");
@@ -129,10 +148,7 @@ public class Item {
         Iterator<JsonNode> relations = relationsNode.getElements();
         while (relations.hasNext()) {
             ObjectNode relation = (ObjectNode) relations.next();
-            // log.info("fieldnameastext rel={} val={}",
-            // relation.findValuesAsText("rel").toArray()[0], relation
-            // .findValues("val").toArray()[0]);
-            String rel = (String) relation.findValuesAsText("rel").toArray()[0];
+             String rel = (String) relation.findValuesAsText("rel").toArray()[0];
             String val = (String) relation.findValuesAsText("val").toArray()[0];
             this.addRelation(new Relation(rel, val));
         }
@@ -197,26 +213,10 @@ public class Item {
      *            - the Relation object to add - must be of class
      *            org.openIOT.Relation
      */
-
     public void addRelation(Relation rel) {
-        // if (this.iObjectMetadata==null) this.iObjectMetadata = new
-        // ArrayList<Relation>();
-
-      //  Logger log3 = LoggerFactory.getLogger(Item.class);
-
-        // String size = "###";
-        // log3.info("relation being added in addRel="+rel.toString());
-
-        // size=new Integer(this.iObjectMetadata.size()).toString();
-        // log3.info("size before adding rel="+size);
-
-        this.iObjectMetadata.add(rel);
-
-        // size=new Integer(this.iObjectMetadata.size()).toString();
-        // log3.info("size after adding rel="+size);
-
-        // log3.info("iomd after rel added ="+this.iObjectMetadata.toString());
-    }
+ 
+         this.iObjectMetadata.add(rel);
+  }
 
     /**
      * returns the first relation object in teh metadata collection whose 'rel'

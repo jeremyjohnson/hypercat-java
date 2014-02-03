@@ -22,6 +22,33 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/* LICENCE INFORMATION for org.openIOT.Hypercat.java
+
+* Copyright (c) 2014 Jeremy Johnson / AlertMe Ltd.
+*  
+* Enables easy creation of valid Hypercat catalogues
+* Written to comply with IoT Ecosystems Demonstrator Interoperability Action Plan V1.0 24th June 2013
+* As found at http://www.openiot.org/apis
+* 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* 
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+* 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+
 /**
  * This class represents the Hypercat object as dedfined in the 1.1 spec.
  * (below)
@@ -85,12 +112,9 @@ public class Hypercat {
      */
     public Hypercat(String description) {
         super();
-        log.info("creating new hypercat");
         itemMetadata = new ArrayList<Relation>();
         items = new HashMap<String, Item>();
-        Relation descriptionRel = new Relation("urn:X-tsbiot:rels:hasDescription:en", description);
-        // log.info(" in HC constructor - relation {} created with value {}",descriptionRel.rel,descriptionRel.val
-        // );
+        Relation descriptionRel = new Relation("urn:X-tsbiot:rels:hasDescription:en", description);        
         addRelation(descriptionRel);
         String validated = validateHypercat(this);
         if (!"VALID".equals(validated)) {
@@ -112,25 +136,16 @@ public class Hypercat {
 
         itemMetadata = new ArrayList<Relation>();
         items = new HashMap<String, Item>();
-
-        log.info("creating new hypercat from JSON string");
-
         // would use Jackson's JSONCreator functions here, except it appears to
         // have a problem with HashMaps - it cannot reliably handle parsing into
-        // a Map
-        // So we have to do it manually, retrieve the maps as Arraylists and
-        // convert them into HashMaps
-
+        // a Map.  So we have to do it manually
+        
         JsonNode rootNode = mapper.readTree(jsonString);
-        //JsonNode hrefNode = rootNode.path("href");
-        // log.info("hrefnode value={}",hrefNode.getTextValue());
-
         JsonNode relationsNode = rootNode.path("item-metadata");
 
         Iterator<JsonNode> relations = relationsNode.getElements();
         while (relations.hasNext()) {
             ObjectNode relation = (ObjectNode) relations.next();
-            // log.info("fieldnameastext rel={} val={}",relation.findValuesAsText("rel").toArray()[0],relation.findValues("val").toArray()[0]);
             String rel = (String) relation.findValuesAsText("rel").toArray()[0];
             String val = (String) relation.findValuesAsText("val").toArray()[0];
             this.addRelation(new Relation(rel, val));
@@ -144,7 +159,6 @@ public class Hypercat {
         // The child Items of an added hypercat are ignored here
 
         JsonNode itemsNode = rootNode.path("items");
-        // log.info("itemsnode="+itemsNode.toString());
         Iterator<JsonNode> items = itemsNode.getElements();
         while (items.hasNext()) {
 
@@ -152,48 +166,25 @@ public class Hypercat {
             Relation reln = null;
 
             ObjectNode itemNode = (ObjectNode) items.next();
-            // log.info("item json={}",item.toString());
 
             // first get Item href
             String itemHref = itemNode.findValue("href").toString();
-            // log.info("href for item={}",itemHref);
             item.setHref(itemHref);
 
             // then get list of metadata relations and add them to
             // i-object-metadata
             JsonNode iomdNode = itemNode.path("i-object-metadata");
             relations = iomdNode.getElements();
-            // log.info("node-status="+iomdNode.isArray());
-            // log.info("item array={}",relations.toString());
             while (relations.hasNext()) {
                 ObjectNode relation = (ObjectNode) relations.next();
-                // log.info("relobject = ={}",relation.getClass());
-
-                // log.info("fieldnameastext rel={} val={}",relation.findValuesAsText("rel").toArray()[0],relation.findValues("val").toArray()[0]);
-                String rel = (String) relation.findValuesAsText("rel").toArray()[0];
+              String rel = (String) relation.findValuesAsText("rel").toArray()[0];
                 String val = (String) relation.findValuesAsText("val").toArray()[0];
                 reln = new Relation(rel, val);
-                // log.info("in HCJsonCreator - relation being added = {} {}",reln.rel,reln.val);
-                // item.addRelation(reln);
-
                 item.getIObjectMetadata().add(reln);
-                // log.info("SIZE of item metadata JUST after adding reln with val contents {} is= {}",reln.val,item.getIObjectMetadata().size());
-
-                // log.info("item metadata JUST after adding is="+item.getIObjectMetadata().get(0));
-
             }
 
             // finally, add the item to the hypercat's items collection
-            // try adding item manually to items
-
-            // log.info("adding item to items collection with value"+item.getIObjectMetadata().toString());
-            this.items.put(itemHref, item);
-
-            // Item itout = (Item) this.getItems().get(itemHref);
-
-            // log.info("itemobject is "+itout.getClass());
-            // log.info("itemobject has rels collecton "+itout.getIObjectMetadata().toString());
-            
+            this.items.put(itemHref, item);            
         }
         
         String validated = validateHypercat(this);
@@ -229,7 +220,6 @@ public class Hypercat {
      *            org.openIOT.Relation)
      */
     public void addRelation(Relation rel) {
-        // log.info("relation being added"+ rel.rel);
         itemMetadata.add(rel);
     }
 
@@ -281,7 +271,6 @@ public class Hypercat {
         Iterator it = this.itemMetadata.iterator();
         while (it.hasNext()) {
             rel = (Relation) it.next();
-            log.info("comparing {} with {})",relLabel,rel.getRel()) ;
             if (rel.getRel().equals(relLabel))
                 relations.add(rel);
         }
@@ -400,8 +389,7 @@ public class Hypercat {
         HashMap<String, Item> valResults = new HashMap<String, Item>();
         boolean relQueryPresent = (!"".equals(relQuery) && relQuery != null);
         boolean valQueryPresent = (!"".equals(valQuery) && valQuery != null);
-        // log.info("this-itemslist-keyset="+this.getItems().entrySet().toString());
-
+ 
         Iterator it = this.getItems().keySet().iterator();
         while (it.hasNext()) {
             String key = (String) it.next();
@@ -412,8 +400,6 @@ public class Hypercat {
             // zero or one items. So if we find an item, immediately quit and
             // return
             if (!"".equals(hrefQuery) && hrefQuery != null) {
-                // log.info("using key="+ key+" comparing query "+hrefQuery+
-                // " to "+hrefstr);
                 if (hrefQuery.equals(hrefstr)) {
                     hc.addItem(res,res.getHref());
                     return (hc);
