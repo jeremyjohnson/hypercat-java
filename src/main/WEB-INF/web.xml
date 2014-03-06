@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE web-app
+  PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+  "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app id="hypercat-java-v2">
+	<display-name>hypercat-java-v2</display-name>
+	<description>Hypercat-java examples</description>
+
+	<servlet>
+		<servlet-name>root</servlet-name>
+		<servlet-class>
+			org.openIOT.examples.ExampleHypercatMainpage
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>createManual</servlet-name>
+		<servlet-class>
+			org.openIOT.examples.CreateHypercatManuallyExample
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>createJson</servlet-name>
+		<servlet-class>
+			org.openIOT.examples.CreateHypercatFromJsonExample
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>createFile</servlet-name>
+		<servlet-class>
+			org.openIOT.examples.CreateHypercatFromFileExample
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>display</servlet-name>
+		<servlet-class>
+			org.openIOT.examples.DisplayHypercatExample
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet>
+		<servlet-name>search</servlet-name>
+		<servlet-class>
+			org.openIOT.examples.SearchHypercatExample
+		</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>root</servlet-name>
+		<url-pattern>/index</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>createManual</servlet-name>
+		<url-pattern>/manualHypercat</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>createJson</servlet-name>
+		<url-pattern>/jsonHypercat</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>createFile</servlet-name>
+		<url-pattern>/fileHypercat</url-pattern>
+	</servlet-mapping>
+
+	<servlet-mapping>
+		<servlet-name>display</servlet-name>
+		<url-pattern>/displayHypercat</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>search</servlet-name>
+		<url-pattern>/searchHypercat</url-pattern>
+	</servlet-mapping>
+
+	<session-config>
+		<session-timeout>60</session-timeout>
+	</session-config>
+	<welcome-file-list>
+		<welcome-file>index</welcome-file>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+		<welcome-file>default.html</welcome-file>
+		<welcome-file>default.htm</welcome-file>
+		<welcome-file>default.jsp</welcome-file>
+	</welcome-file-list>
+	
+</web-app>
+

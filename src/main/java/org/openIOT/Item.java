@@ -91,7 +91,7 @@ public class Item {
     }
 
     /**
-     * constructor returning a minimum-spec Item
+     *   constructor returning a minimum-spec Item
      * 
      * @param href
      *            - a URI that serves to uniquely identify an item within the

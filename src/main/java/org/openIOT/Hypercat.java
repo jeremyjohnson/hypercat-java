@@ -381,6 +381,7 @@ public class Hypercat {
      */
     public Hypercat searchCat(String querystring) {
         Hypercat hc = new Hypercat("Search results for querystring: " + querystring);
+        log.info("QS="+querystring);
         HashMap qmap = getQueryMap(querystring);
         String hrefQuery = (String) qmap.get("href");
         String relQuery = (String) qmap.get("rel");
@@ -477,7 +478,7 @@ public class Hypercat {
      * outputs a string of JSON contaning the Hypcercat's definition
      * 
      */
-    String toJson() throws JsonGenerationException, JsonMappingException, IOException {
+    public String toJson() throws JsonGenerationException, JsonMappingException, IOException {
 
         String output = "NO JSON";
         ObjectMapper mapper = new ObjectMapper();
@@ -489,7 +490,7 @@ public class Hypercat {
      * outputs a prettily-formatted indented string of JSON contaning the
      * Hypcercat's definition
      */
-    String toPrettyJson() throws JsonGenerationException, JsonMappingException, IOException {
+    public String toPrettyJson() throws JsonGenerationException, JsonMappingException, IOException {
         String output = "NO JSON";
         ObjectMapper mapper = new ObjectMapper();
         output = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);

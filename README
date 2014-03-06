@@ -14,7 +14,7 @@ http://wiki.1248.io/doku.php?id=hypercat
 
 The javadoc for this library (included) will explain what it does, but in brief, it
 contains classes that represent Hypercat, Item and Relation objects, and methods that
-enable their creation (both anually and from JSON streams) and manipulation.
+enable their creation (both manually and from JSON streams) and manipulation.
 
 The project welcomes contributions by interested hackers and other ne'er-do-wells.
 
