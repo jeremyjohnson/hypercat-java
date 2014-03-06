@@ -16,9 +16,44 @@ The javadoc for this library (included) will explain what it does, but in brief,
 contains classes that represent Hypercat, Item and Relation objects, and methods that
 enable their creation (both manually and from JSON streams) and manipulation.
 
-The project welcomes contributions by interested hackers and other ne'er-do-wells.
+A collection of example servlets making up a simple web-application 
+(the classes in org.openIOT.examples, and the file WEB-INF/web.xml) is also included.  
+These demonstrate the creation and manipulation of hypercat objects in java.  In 
+order to try these out, you will need to have a servlet container available to deploy
+the webapp on (eg Apache Tomcat, Jetty, etc).  If you wish to install one, this is 
+fairly straightforward.  First of all, make sure you have a Java JDK (v5+) installed, 
+then go to http://tomcat.apache.org/download-60.cgi and follow the instructions for 
+your system.
 
-Jeremy Johnson, Jan 2014
+Once you have installed Tomcat, you can deploy the webapp very easily.  Just copy 
+the file called hypercat.war into the directory in the installed Tomcat location called
+'webapps'.  For example, if you have installed Tomcat in the location 
+/usr/local/share/apache-tomcat-6/ then cd to this directory and you will find that 
+one of the subdirectories is called'webapps'. Copy hypercat.war to this webapps 
+directory).  Once you have done this, and started up Tomcat, then the hypercat
+example webapp can be tried by visiting <localurl>/hypercat.  For example, if you have
+installed Tomcat to respond on port 8080 (the default), the hypercat webapp can be found
+at http://127.0.0.1:8080/hypercat.
+
+The webapp allows you to create hypercats via a number of methods: either a minimal basic
+one via typing in a description, or via pasting in a JSON string defining a hypercat, 
+or by uploading a file of JSON containing a definition.  Validity of the JSON is checked 
+when the hypercat is being created.  There are several example hypercats in files in the
+src/test/resources folder on the git repo.  Note that the upload facility assumes that 
+tomcat has write-access to a top-level directory called /tmp
+
+The created hypercats are displayed on creation, and a search utility provided to allow 
+the hypercat to be searched.  This utility is fairly basic: it allows the href, rel and val 
+elements of the hypercat's items collection to be searched for exact matches (eg for the 
+hypercat defined in src/test/resources/searchHypercatExample.json, searching for val=3 produces 
+a hypercat with three items, whereas searching for rel=urn:X-tsbiot:rels:1 produces a results-
+hypercat containing two items).  No wildcards etc are supported - this is left as an exercise
+for the student!
+
+The project is a work-in-progress, and in no sense a finished article - openIOT welcomes 
+contributions by interested hackers and other ne'er-do-wells.
+
+Jeremy Johnson, Mar 2014
 
 
 
